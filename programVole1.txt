@@ -1,8 +1,6 @@
-; Vole Machine Program
-; Purpose: Load two numbers (5 and 7), add them, and display the result (12)
-
-2005
-2107
-5201
-3200
-C000
+; Custom Program 1: Add 4 and 2
+2004 ; Load 4 into R0
+2102 ; Load 2 into R1
+5201 ; Add R0 and R1, store in R2
+3200 ; Store R2 into memory [00]
+C000 ; Halt
