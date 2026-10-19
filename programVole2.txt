@@ -1,6 +1,4 @@
-; Vole Machine Program 2
-; Purpose: Load a value into register 0, move it to register 1, and halt.
-
-200A ; Load immediate value 0A into register 0
-4100 ; Move the bit pattern from register 0 to register 1
-C000 ; Halt execution
+; Custom Program 2: Load and Move
+2008 ; Load 8 into R0
+4300 ; Move R0 to R3
+C000 ; Halt
