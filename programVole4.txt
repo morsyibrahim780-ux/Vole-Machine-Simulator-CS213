@@ -1,0 +1,4 @@
+; Custom Program 4: Load and Move
+200F ; Load 15 (F) into R0
+4300 ; Move R0 to R3
+C000 ; Halt
