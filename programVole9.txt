@@ -1,0 +1,4 @@
+; Custom Program 9: Store register to memory
+2025 ; Load 25 into R0
+3020 ; Store R0 into memory address 20
+C000 ; Halt

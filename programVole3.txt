@@ -1,0 +1,5 @@
+; Custom Program 3: Load values and add
+210A ; Load 10 into R1
+2205 ; Load 5 into R2
+5312 ; Add R1 and R2, store in R3
+C000 ; Halt
