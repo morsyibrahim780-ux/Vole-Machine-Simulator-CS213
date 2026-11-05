@@ -1,0 +1,5 @@
+; Custom Program 10: Conditional Jump
+2000 ; Load 0 into R0
+2100 ; Load 0 into R1
+B106 ; Jump to instruction at hex 06 if R1 == R0
+C000 ; Halt
