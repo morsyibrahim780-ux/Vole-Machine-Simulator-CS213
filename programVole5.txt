@@ -1,0 +1,5 @@
+; Custom Program 5: Logical OR operation
+2103 ; Load 3 into R1
+220C ; Load 12 (C) into R2
+7312 ; Bitwise OR R1 and R2, store in R3
+C000 ; Halt
