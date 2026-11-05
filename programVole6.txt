@@ -1,0 +1,5 @@
+; Custom Program 6: Logical AND operation
+210F ; Load 15 into R1
+2203 ; Load 3 into R2
+8312 ; Bitwise AND R1 and R2, store in R3
+C000 ; Halt
