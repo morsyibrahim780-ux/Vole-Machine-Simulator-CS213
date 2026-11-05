@@ -1,0 +1,4 @@
+; Custom Program 8: Rotate right
+2180 ; Load pattern into R1
+A102 ; Rotate R1 right 2 times
+C000 ; Halt
