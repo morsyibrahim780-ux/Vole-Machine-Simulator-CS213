@@ -1,0 +1,5 @@
+; Custom Program 7: Logical XOR operation
+210F ; Load 15 into R1
+2205 ; Load 5 into R2
+9312 ; Bitwise XOR R1 and R2, store in R3
+C000 ; Halt
