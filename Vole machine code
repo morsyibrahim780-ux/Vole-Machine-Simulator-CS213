@@ -98,7 +98,9 @@ public:
     
     unsigned char rotateRight(unsigned char value, unsigned char amount) const {
         amount %= 8;
+        if (amount == 0) return value;
         return (value >> amount) | (value << (8 - amount));
+
     }
     
     double decodeFloat(unsigned char val) const {
@@ -128,19 +130,57 @@ public:
 class ProgramLoader {
 public:
     void loadProgramFromFile(Memory& mem, string filename) {
+
         ifstream file(filename);
+
         if (!file.is_open()) {
             cout << "Error opening file!" << endl;
             return;
         }
+
+        mem.clear();
+
         string instruction;
         int address = 0;
-        while (file >> instruction && address < 256) {
-            mem.write(address, instruction);
-            address++;
+
+        while (file >> instruction) {
+
+            if (instruction == "END" || instruction == "end")
+                break;
+
+            if (instruction.length() != 4) {
+                cout << "Invalid instruction: " << instruction << endl;
+                return;
+            }
+
+            try {
+                size_t pos;
+                stoul(instruction, &pos, 16);
+
+                if (pos != 4)
+                    throw invalid_argument("Invalid hex");
+
+            }
+            catch (...) {
+                cout << "Invalid hexadecimal instruction: "
+                     << instruction << endl;
+                return;
+            };
+
+            if (address > 252) {
+                cout << "Program is too large!" << endl;
+                return;
+            };
+
+            mem.write(address, instruction.substr(0, 2));
+            mem.write(address + 1, instruction.substr(2, 2));
+
+            address += 2;
         }
+
         file.close();
-        cout << "Program loaded successfully from file." << endl;
+
+        cout << "Program loaded successfully!" << endl;
     }
 };
 
@@ -159,7 +199,7 @@ public:
     }
 
     void step(Memory& mem, RegisterFile& regFile, ALU& alu) {
-        if (pc < 0 || pc >= 255) return;
+        if (pc < 0 || pc+1 >= 255) return;
         
         string byte1_str = mem.read(pc);
         string byte2_str = mem.read(pc + 1);
@@ -256,7 +296,7 @@ public:
 
     void run(Memory& mem, RegisterFile& regFile, ALU& alu) {
         pc = 0;
-        while (pc < 256) {
+        while (pc+1 < 255) {
             string op1_str = mem.read(pc);
             unsigned char op1 = stoi(op1_str, nullptr, 16);
             unsigned char opcode = (op1 >> 4) & 0x0F;

@@ -1,41 +1,129 @@
 #include <iostream>
 #include <string>
 #include "Memory.h"
-#include "Screen.h"
-#include "ProgramLoader.h"
-#include "RegisterFile+ALU"
-#include "ControlUnit.h"
 
 using namespace std;
 
 int main() {
-    Memory mem;
+
+    // Create all simulator components
+
+    Memory memory;
+    RegisterFile registers;
+    ALU alu;
     ProgramLoader loader;
+    Simulator simulator;
+
     int choice;
+    string filename;
+
+    bool programLoaded = false;
 
     do {
-        cout << "\n--- Vole Machine Simulator ---" << endl;
-        cout << "1. Load Program from File" << endl;
-        cout << "2. Exit" << endl;
-        cout << "Enter your choice: [span_1](start_span)"[span_1](end_span);
+
+        cout << "\n========== VOLE MACHINE SIMULATOR ==========\n";
+
+        cout << "1. Load Program\n";
+        cout << "2. Execute One Instruction\n";
+        cout << "3. Run Entire Program\n";
+        cout << "4. Display Registers\n";
+        cout << "5. Display Program Counter\n";
+        cout << "6. Reset Machine\n";
+        cout << "0. Exit\n";
+
+        cout << "============================================\n";
+
+        cout << "Enter your choice: ";
         cin >> choice;
 
-        if (choice == 1) {
-            string filename;
-            cout << "Enter filename (e.g., programVole1.txt): [span_2](start_span)"[span_2](end_span);
+        switch (choice) {
+
+        case 1:
+
+            cout << "Enter program filename: ";
             cin >> filename;
-            
-            loader.loadProgramFromFile(mem, filename)[span_3](start_span)[span_3](end_span);
-            
-            RegisterFile regFile;
-            ALU alu;
-            Screen screen;
-            ControlUnit controlUnit(mem, regFile, alu, screen);
-            
-            cout << "\nExecuting Program..." << endl;
-            controlUnit.executeProgram();
+
+            loader.loadProgramFromFile(memory, filename);
+
+            simulator.reset();
+            registers.clear();
+
+            programLoaded = true;
+
+            break;
+
+
+        case 2:
+
+            if (!programLoaded) {
+                cout << "Please load a program first!\n";
+                break;
+            }
+
+            simulator.step(memory, registers, alu);
+
+            cout << "Instruction executed.\n";
+
+            break;
+
+
+        case 3:
+
+            if (!programLoaded) {
+                cout << "Please load a program first!\n";
+                break;
+            }
+
+            simulator.run(memory, registers, alu);
+
+            cout << "Program execution finished.\n";
+
+            break;
+
+
+        case 4:
+
+            registers.display();
+
+            break;
+
+
+        case 5:
+
+            cout << "Program Counter: "
+                 << simulator.getPC() << endl;
+
+            break;
+
+
+        case 6:
+
+            memory.clear();
+            registers.clear();
+            simulator.reset();
+
+            programLoaded = false;
+
+            cout << "Machine reset successfully!\n";
+
+            break;
+
+
+        case 0:
+
+            cout << "Exiting Vole Machine Simulator...\n";
+
+            break;
+
+
+        default:
+
+            cout << "Invalid choice! Try again.\n";
+
         }
-    } while (choice != 2);
+
+    } while (choice != 0);
+
 
     return 0;
 }
