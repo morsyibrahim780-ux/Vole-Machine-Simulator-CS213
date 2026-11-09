@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <cmath>
 #include <fstream>
+#include <sstream>
 
 using namespace std;
 
@@ -30,7 +31,17 @@ public:
             }
         }
     }
-
+    uint8_t readByte(int address) {
+        if (address >= 0 && address < 256) {
+            return (uint8_t) stoi(cells[address], nullptr, 16);
+        }
+        return 0;
+    }
+    void writeByte(int address, uint8_t value) {
+        stringstream ss;
+        ss << hex << uppercase << setw(2) << setfill('0') << (int)value;
+        write(address, ss.str());
+    }
     string read(int address) {
         if (address >= 0 && address < 256) {
             return cells[address];
@@ -92,6 +103,7 @@ public:
     
     unsigned char rotateRight(unsigned char value, unsigned char amount) const {
         amount %= 8;
+        if (amount == 0) return value;
         return (value >> amount) | (value << (8 - amount));
     }
     
@@ -127,11 +139,23 @@ public:
             cout << "Error opening file!" << endl;
             return;
         }
+        mem.clear();
         string instruction;
         int address = 0;
-        while (file >> instruction && address < 256) {
-            mem.write(address, instruction);
-            address++;
+        while(file >> instruction && address <= 252) {
+            if (instruction.length() != 4) {
+                try { stoull(instruction, nullptr, 16); 
+                }
+                catch (...) {
+                    cout << "Invalid hexadecimal format: " << instruction << endl;
+                    return;
+                }
+                cout << "Invalid instruction format: " << instruction << endl;
+                return;
+            }
+            mem.writeByte(address, stoul(instruction.substr(0, 2), nullptr, 16));
+            mem.writeByte(address + 1, stoul(instruction.substr(2, 2), nullptr, 16));
+            address += 2;
         }
         file.close();
         cout << "Program loaded successfully from file." << endl;
@@ -167,16 +191,19 @@ public:
     }
 
     void displayStatus() {
-        cout << "PC: " << pc 
-             << " | Instruction: " << instructionRegister 
+        cout << hex << uppercase;
+        cout << "PC : " << pc
+             << " | Instruction : " << setw(4) << setfill('0') << instructionRegister
              << " | Halted: " << (halted ? "True" : "False") 
              << " | Error: " << (error ? errorMessage : "None") << endl;
+             cout << dec << setfill(' ');
     }
 
     bool executeNext(Memory& memory, RegisterFile& registers, ALU& alu) {
     if (halted || error) return false;
-
-    instructionRegister = memory.read(pc);
+    uint8_t highByte = memory.readByte(pc);
+    uint8_t lowByte = memory.readByte(pc + 1); 
+    instructionRegister = (highByte << 8) | lowByte;
     pc += 2;
 
     int opcode = (instructionRegister >> 12) & 0x0F;
@@ -188,19 +215,19 @@ public:
     switch (opcode) {
         case 0x1:
             {
-                uint8_t memValue = memory.read(xy);
-                registers.setRegister(r, memValue);
+                uint8_t memValue = memory.readByte(xy);
+                registers.set(r, memValue);
             }
             break;
 
         case 0x2:
-            registers.setRegister(r, xy);
+            registers.set(r, xy);
             break;
 
         case 0x3:
             {
-                uint8_t regValue = registers.getRegister(r);
-                memory.write(xy, regValue);
+                uint8_t regValue = registers.get(r);
+                memory.writeByte(xy, regValue);
             }
             break;
 
