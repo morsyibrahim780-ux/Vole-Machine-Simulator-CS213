@@ -89,3 +89,4 @@ public:
     return !halted && !error;
 
     }
+};
