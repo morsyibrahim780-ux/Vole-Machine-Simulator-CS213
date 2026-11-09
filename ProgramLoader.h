@@ -5,24 +5,39 @@
 #include <fstream>
 #include <string>
 #include "Memory.h"
+
 using namespace std;
 
 class ProgramLoader {
 public:
-    void loadProgramFromFile(Memory& mem, string filename) {
+    void loadProgramFromFile(Memory& mem, const string& filename) {
+        mem.clear();
+
         ifstream file(filename);
         if (!file.is_open()) {
-            cout << "Error opening file!" << endl;
             return;
         }
-        string instruction;
+
+        string token;
         int address = 0;
-        while (file >> instruction && address < 256) {
-            mem.write(address, instruction);
-            address++;
+
+        while (file >> token && address < 256) {
+            if (token.length() == 4) {
+                if (address + 1 < 256) {
+                    mem.write(address, token.substr(0, 2));
+                    mem.write(address + 1, token.substr(2, 2));
+                    address += 2;
+                }
+            } else if (token.length() <= 2) {
+                if (token.length() == 1) {
+                    token = "0" + token;
+                }
+                mem.write(address, token);
+                address++;
+            }
         }
+
         file.close();
-        cout << "Program loaded successfully from file." << endl;
     }
 };
 
