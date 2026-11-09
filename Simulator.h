@@ -1,138 +1,110 @@
 #ifndef SIMULATOR_H
 #define SIMULATOR_H
 
-#include <iostream>
-#include <string>
-#include <iomanip>
-#include <sstream>
+#include "Screen.h"
 #include "Memory.h"
 #include "RegisterFile.h"
 #include "ALU.h"
+#include "ControlUnit.h"
+#include "ProgramLoader.h"
+#include <iostream>
+#include <string>
 
 using namespace std;
 
 class Simulator {
 private:
-    int pc; 
-public:
-    Simulator() : pc(0) {}
+    Screen screen;
+    Memory memory;
+    RegisterFile registers;
+    ALU alu;
+    controlUnit cpu;
+    ProgramLoader loader;
 
-    void reset(int startAddress = 0) {
-        pc = startAddress;
+public:
+    Simulator() : memory(screen) {}
+
+    void reset() {
+        cpu.reset();
     }
 
     int getPC() const {
-        return pc;
+        return cpu.getPC();
     }
 
-    void step(Memory& mem, RegisterFile& regFile, ALU& alu) {
-        if (pc < 0 || pc >= 255) return;
-        
-        string byte1_str = mem.read(pc);
-        string byte2_str = mem.read(pc + 1);
-        
-        unsigned char op1 = stoi(byte1_str, nullptr, 16);
-        unsigned char op2 = stoi(byte2_str, nullptr, 16);
-        
-        unsigned char opcode = (op1 >> 4) & 0x0F;
-        unsigned char r = op1 & 0x0F;
-        unsigned char xy = op2;
-        unsigned char s = (op2 >> 4) & 0x0F;
-        unsigned char t = op2 & 0x0F;
-        unsigned char x = (op2 >> 4) & 0x0F;
+    void step(Memory& memory, RegisterFile& registers, ALU& alu) {
+        cpu.executeNext(memory, registers, alu);
+        cpu.displayStatus();
+    }
 
-        pc += 2;
+    void run(Memory& memory, RegisterFile& registers, ALU& alu) {
+        int steps = 0;
+        while (!cpu.isHalted() && !cpu.hasError() && steps < 10000) {
+            cpu.executeNext(memory, registers, alu);
+            steps++;
+        }
+        if (steps >= 10000) {
+            cout << "Execution stopped: Reached 10,000 step limit.\n";
+        }
+    }
 
-        switch (opcode) {
-            case 0x1: { 
-                string val = mem.read(xy);
-                regFile.set(r, stoi(val, nullptr, 16));
+    void menu() {
+        int choice;
+        string filename;
+
+        do {
+            cout << "\n===== VOLE MACHINE SIMULATOR =====\n";
+            cout << "1. Enter Program Manually\n";
+            cout << "2. Execute One Instruction (Step)\n";
+            cout << "3. Run Entire Program\n";
+            cout << "4. Display Registers\n";
+            cout << "5. Display Program Counter\n";
+            cout << "6. Reset Machine\n";
+            cout << "0. Exit\n";
+            cout << "\nEnter your choice: ";
+            cin >> choice;
+
+            switch (choice) {
+            case 1:
+                memory.clear();
+                registers.clear();
+                reset();
+                loader.loadProgramManually(memory);
                 break;
-            }
-            case 0x2: { 
-                regFile.set(r, xy);
+
+            case 2:
+                step(memory, registers, alu);
                 break;
-            }
-            case 0x3: { 
-                unsigned char val = regFile.get(r);
-                stringstream ss;
-                ss << hex << uppercase << setw(2) << setfill('0') << (int)val;
-                mem.write(xy, ss.str());
+
+            case 3:
+                run(memory, registers, alu);
                 break;
-            }
-            case 0x4: { 
-                regFile.set(r, regFile.get(s));
+
+            case 4:
+                registers.display();
                 break;
-            }
-            case 0x5: { 
-                unsigned char valS = regFile.get(s);
-                unsigned char valT = regFile.get(t);
-                unsigned char res = alu.addInteger(valS, valT);
-                regFile.set(r, res);
+
+            case 5:
+                cout << "Program Counter: " << hex << uppercase << getPC() << dec << endl;
                 break;
-            }
-            case 0x6: { 
-                unsigned char valS = regFile.get(s);
-                unsigned char valT = regFile.get(t);
-                unsigned char res = alu.addFloat(valS, valT);
-                regFile.set(r, res);
+
+            case 6:
+                memory.clear();
+                registers.clear();
+                screen.clear();
+                reset();
+                cout << "Reset successful" << endl;
                 break;
-            }
-            case 0x7: { 
-                unsigned char valS = regFile.get(s);
-                unsigned char valT = regFile.get(t);
-                unsigned char res = alu.bitwiseOr(valS, valT);
-                regFile.set(r, res);
+
+            case 0:
+                cout << "Exiting successful" << endl;
                 break;
-            }
-            case 0x8: { 
-                unsigned char valS = regFile.get(s);
-                unsigned char valT = regFile.get(t);
-                unsigned char res = alu.bitwiseAnd(valS, valT);
-                regFile.set(r, res);
-                break;
-            }
-            case 0x9: { 
-                unsigned char valS = regFile.get(s);
-                unsigned char valT = regFile.get(t);
-                unsigned char res = alu.bitwiseXor(valS, valT);
-                regFile.set(r, res);
-                break;
-            }
-            case 0xA: { 
-                unsigned char val = regFile.get(r);
-                unsigned char res = alu.rotateRight(val, x);
-                regFile.set(r, res);
-                break;
-            }
-            case 0xB: { 
-                if (regFile.get(r) == regFile.get(0)) {
-                    pc = xy;
-                }
-                break;
-            }
-            case 0xC: { 
-                pc = 256; 
-                cout << "Halt instruction executed." << endl;
-                break;
-            }
+
             default:
-                break;
-        }
-    }
-
-    void run(Memory& mem, RegisterFile& regFile, ALU& alu) {
-        pc = 0;
-        while (pc < 256) {
-            string op1_str = mem.read(pc);
-            unsigned char op1 = stoi(op1_str, nullptr, 16);
-            unsigned char opcode = (op1 >> 4) & 0x0F;
-            if (opcode == 0xC) {
-                step(mem, regFile, alu);
-                break;
+                cout << "Invalid choice" << endl;
             }
-            step(mem, regFile, alu);
-        }
+
+        } while (choice != 0);
     }
 };
 

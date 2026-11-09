@@ -1,4 +1,15 @@
-; Custom Program 9: Store register to memory
-2025 ; Load 25 into R0
-3020 ; Store R0 into memory address 20
-C000 ; Halt
+; Computes Fibonacci sequence and shifts bits
+; R1 = 0 (Index counter / accumulator)
+; R2 = 1 (First Fibonacci number)
+; R3 = 1 (Second Fibonacci number)
+; R4 = 10 (Target limit)
+
+2100 ; Load R1 with 0 (Initialize counter)
+2201 ; Load R2 with 1 
+2301 ; Load R3 with 1
+240A ; Load R4 with 10 (Decimal 10)
+
+; --- Main Loop Start (Memory Address 04) ---
+5323 ; Add R2 and R3, store in R3 (R3 = R2 + R3)
+; (Add more complex operations here based on your ALU implementation)
+C000 ; Halt program

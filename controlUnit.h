@@ -1,9 +1,14 @@
+#ifndef CONTROLUNIT_H
+#define CONTROLUNIT_H
+
+#include "Memory.h"
+#include "RegisterFile.h"
+#include "ALU.h"
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <cstdint>
-#include "Screen.h"
-#include <iomanip>
-#include <cmath>
+
 using namespace std;
 
 class controlUnit {
@@ -37,6 +42,10 @@ public:
 
     bool hasError() {
         return error;
+    }
+
+    int getPC() const { 
+        return pc; 
     }
 
     void displayStatus() {
@@ -152,3 +161,5 @@ public:
         return !halted && !error;
     }
 };
+
+#endif

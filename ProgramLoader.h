@@ -1,44 +1,73 @@
-#ifndef PROGRAM_LOADER_H
-#define PROGRAM_LOADER_H
+#ifndef PROGRAMLOADER_H
+#define PROGRAMLOADER_H
 
-#include <iostream>
-#include <fstream>
-#include <string>
 #include "Memory.h"
+#include <iostream>
+#include <string>
+#include <stdexcept>
 
 using namespace std;
 
 class ProgramLoader {
-public:
-    void loadProgramFromFile(Memory& mem, const string& filename) {
-        mem.clear();
+    private:
 
-        ifstream file(filename);
-        if (!file.is_open()) {
-            return;
-        }
+        bool loadInstructions(istream& input, Memory& memory) {
 
-        string token;
-        int address = 0;
+            memory.clear();
 
-        while (file >> token && address < 256) {
-            if (token.length() == 4) {
-                if (address + 1 < 256) {
-                    mem.write(address, token.substr(0, 2));
-                    mem.write(address + 1, token.substr(2, 2));
-                    address += 2;
+            string instruction;
+            int address = 0;
+
+            while (input >> instruction) {
+
+                if (instruction == "END" || instruction == "end"){
+                    break;
+
                 }
-            } else if (token.length() <= 2) {
-                if (token.length() == 1) {
-                    token = "0" + token;
+
+                if (instruction.length() != 4) {
+                    cout << "Invalid instruction: "
+                         << instruction << endl;
+                    return false;
                 }
-                mem.write(address, token);
-                address++;
+
+                try {
+                    size_t pos;
+                    stoul(instruction, &pos, 16);
+
+                    if (pos != 4)
+                        throw invalid_argument("Invalid hex");
+                }
+                catch (...) {
+                    cout << "Invalid instruction "
+                         << instruction << endl;
+                    return false;
+                }
+
+                if (address > 252) {
+                    cout << "Program is too large" << endl;
+                    return false;
+                }
+
+                memory.write(address, instruction.substr(0, 2));
+                memory.write(address + 1, instruction.substr(2, 2));
+
+                address += 2;
             }
+
+            cout << "Program loaded successfully" << endl;
+            return true;
         }
 
-        file.close();
-    }
-};
+    public:
+
+        void loadProgramManually(Memory& mem) {
+
+            cout << "\nEnter your instructions one by one as a 4 digits hex code." << endl;
+            cout << "Type END when you finish.\n" << endl;
+
+            loadInstructions(cin, mem);
+        }
+    };
 
 #endif

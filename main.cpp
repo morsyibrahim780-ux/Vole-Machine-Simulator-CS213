@@ -1,11 +1,9 @@
-#include <iostream>
-#include <string>
-#include "Memory.h"
+#include "Simulator.h"
 
 using namespace std;
 
 int main() {
-    
+
     Simulator simulator;
     simulator.menu();
     
