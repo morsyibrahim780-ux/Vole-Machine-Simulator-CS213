@@ -3,11 +3,23 @@
 
 #include <iostream>
 #include <string>
+#include <iomanip>
+#include <cmath>
+#include <fstream>
+
 using namespace std;
+
+class Screen {
+public:
+    void show(string text) {
+        cout << "Output: " << text << endl;
+    }
+};
 
 class Memory {
 private:
-    string cells[256];      
+    string cells[256];
+    Screen scr;
 public:
     Memory() {
         for(int i = 0; i < 256; i++) {
@@ -17,9 +29,9 @@ public:
 
     void write(int address, string value) {
         if (address >= 0 && address < 256) {
-            cells[address] = value ;
+            cells[address] = value;
             if (address == 255) {
-                displayScreen(value);
+                scr.show(value);
             }
         }
     }
@@ -31,8 +43,103 @@ public:
         return "00";
     }
 
-    void displayScreen(string val) {
-        cout << "Screen Output (Address FF): " << val << endl;
+    void clear() {
+        for(int i = 0; i < 256; i++) {
+            cells[i] = "00";
+        }
+    }
+};
+
+class RegisterFile {
+private:
+    unsigned char registers[16] = {0};
+public:
+    unsigned char get(int index) const {
+        if (index >= 0 && index < 16) return registers[index];
+        return 0;     
+    }
+    
+    void set(int index, unsigned char value) {
+        if (index >= 0 && index < 16) registers[index] = value;
+    }
+    
+    void clear() {
+        for (int i = 0; i < 16; i++) registers[i] = 0;
+    }
+    
+    void display() const {
+        cout << "registers Content" << endl;
+        for (int i = 0; i < 16; i++) {
+            cout << "R" << hex << uppercase << i << ":" << setw(2) << setfill('0') << (int)registers[i] << " ";
+            if ((i + 1) % 4 == 0) cout << endl;
+        }
+        cout << dec << setfill(' ');
+    }
+};
+
+class ALU {
+public:
+    unsigned char addInteger(unsigned char a, unsigned char b) const {
+        return a + b;
+    }
+    
+    unsigned char bitwiseAnd(unsigned char a, unsigned char b) const {
+        return a & b;
+    }
+    
+    unsigned char bitwiseOr(unsigned char a, unsigned char b) const {
+        return a | b;
+    }
+    
+    unsigned char bitwiseXor(unsigned char a, unsigned char b) const {
+        return a ^ b;
+    }
+    
+    unsigned char rotateRight(unsigned char value, unsigned char amount) const {
+        amount %= 8;
+        return (value >> amount) | (value << (8 - amount));
+    }
+    
+    double decodeFloat(unsigned char val) const {
+        int sign = (val & 0x80) ? -1 : 1;
+        int exp = ((val >> 4) & 0x07) - 4;
+        int mantissa = val & 0x0F;
+        return sign * (mantissa / 16.0) * pow(2.0, exp);
+    }
+    
+    unsigned char encodeFloat(double val) const {
+        if (val == 0.0) return 0;
+        unsigned char sign = (val < 0) ? 0x80 : 0;
+        val = abs(val);
+        int exp = 0;
+        while (val >= 1.0 && exp < 3) { val /= 2.0; exp++; }
+        while (val < 0.5 && exp > -4) { val *= 2.0; exp--; }
+        int mantissa = (int)(val * 16.0 + 0.5);
+        if (mantissa > 15) mantissa = 15;
+        return sign | ((exp + 4) << 4) | mantissa;
+    }
+    
+    unsigned char addFloat(unsigned char a, unsigned char b) const {
+        return encodeFloat(decodeFloat(a) + decodeFloat(b));
+    }
+};
+
+class ProgramLoader {
+public:
+    void loadProgramFromFile(Memory& mem, string filename) {
+        ifstream file(filename);
+        if (!file.is_open()) {
+            cout << "Error opening file!" << endl;
+            return;
+        }
+        string instruction;
+        int address = 0;
+        while (file >> instruction && address < 256) {
+            mem.write(address, instruction);
+            address++;
+        }
+        file.close();
+        cout << "Program loaded successfully from file." << endl;
     }
 };
 
