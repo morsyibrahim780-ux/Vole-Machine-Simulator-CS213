@@ -149,9 +149,9 @@ public:
 class ProgramLoader {
     private:
 
-        bool loadInstructions(istream& input, Memory& mem) {
+        bool loadInstructions(istream& input, Memory& memory) {
 
-            mem.clear();
+            memory.clear();
 
             string instruction;
             int address = 0;
@@ -161,14 +161,12 @@ class ProgramLoader {
                 if (instruction == "END" || instruction == "end")
                     break;
 
-                // Check instruction length
                 if (instruction.length() != 4) {
                     cout << "Invalid instruction: "
-                        << instruction << endl;
+                         << instruction << endl;
                     return false;
                 }
 
-                // Check hexadecimal format
                 try {
                     size_t pos;
                     stoul(instruction, &pos, 16);
@@ -177,20 +175,18 @@ class ProgramLoader {
                         throw invalid_argument("Invalid hex");
                 }
                 catch (...) {
-                    cout << "Invalid hexadecimal instruction: "
-                        << instruction << endl;
+                    cout << "Invalid instruction"
+                         << instruction << endl;
                     return false;
                 }
 
-                // Check memory size
                 if (address > 252) {
-                    cout << "Program is too large!" << endl;
+                    cout << "Program is too large" << endl;
                     return false;
                 }
 
-                // Store instruction as two bytes
-                mem.write(address, instruction.substr(0, 2));
-                mem.write(address + 1, instruction.substr(2, 2));
+                memory.write(address, instruction.substr(0, 2));
+                memory.write(address + 1, instruction.substr(2, 2));
 
                 address += 2;
             }
@@ -201,22 +197,6 @@ class ProgramLoader {
 
     public:
 
-        // Load program from file
-        void loadProgramFromFile(Memory& mem, string filename) {
-
-            ifstream file(filename);
-
-            if (!file.is_open()) {
-                cout << "Error opening file!" << endl;
-                return;
-            }
-
-            loadInstructions(file, mem);
-
-            file.close();
-        }
-
-        // Load program manually
         void loadProgramManually(Memory& mem) {
 
             cout << "\nEnter your instructions one by one." << endl;
@@ -226,7 +206,7 @@ class ProgramLoader {
         }
     };
 
-// MOVED controlUnit UP
+
 class controlUnit {
 
 private:
@@ -419,64 +399,54 @@ public:
 
         do {
             cout << "\n===== VOLE MACHINE SIMULATOR =====\n";
-            cout << "1. Load Program From File\n";
-            cout << "2. Enter Program Manually\n";
-            cout << "3. Execute One Instruction (Step)\n";
-            cout << "4. Run Entire Program\n";
-            cout << "5. Display Registers\n";
-            cout << "6. Display Program Counter\n";
-            cout << "7. Reset Machine\n";
+            cout << "1. Enter Program Manually\n";
+            cout << "2. Execute One Instruction (Step)\n";
+            cout << "3. Run Entire Program\n";
+            cout << "4. Display Registers\n";
+            cout << "5. Display Program Counter\n";
+            cout << "6. Reset Machine\n";
             cout << "0. Exit\n";
             cout << "\nEnter your choice: ";
             cin >> choice;
 
             switch (choice) {
             case 1:
-                cout << "Enter file name: ";
-                cin >> filename;
-                memory.clear();
-                registers.clear();
-                reset();
-                loader.loadProgramFromFile(memory, filename);
-                break;
-
-            case 2:
                 memory.clear();
                 registers.clear();
                 reset();
                 loader.loadProgramManually(memory);
                 break;
 
-            case 3:
+            case 2:
                 step(memory, registers, alu);
                 break;
 
-            case 4:
+            case 3:
                 run(memory, registers, alu);
                 break;
 
-            case 5:
+            case 4:
                 registers.display();
                 break;
 
-            case 6:
+            case 5:
                 cout << "Program Counter: " << hex << uppercase << getPC() << dec << endl;
                 break;
 
-            case 7:
+            case 6:
                 memory.clear();
                 registers.clear();
                 screen.clear();
                 reset();
-                cout << "Machine reset successfully!" << endl;
+                cout << "Reset successful" << endl;
                 break;
 
             case 0:
-                cout << "Exiting Vole Machine Simulator..." << endl;
+                cout << "Exiting successful" << endl;
                 break;
 
             default:
-                cout << "Invalid choice!" << endl;
+                cout << "Invalid choice" << endl;
             }
 
         } while (choice != 0);
